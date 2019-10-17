@@ -1,0 +1,149 @@
+
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */
+
+PARSER_BEGIN(SyntaxChecker)
+package YANG2JAVA;
+public class SyntaxChecker
+{
+ /* public static void main(String args []) throws ParseException
+  {
+     try
+     {
+        //FileInputStream yangfile=new FileInputStream("C:/Users/Manisha/Desktop/project/programs/Demo/src/input.yang");
+        //new SyntaxChecker(yangfile.P());
+        String input="module example-sports { }"; 
+        new SyntaxCheckerinput.P();
+            System.out.println("Syntax is okay");
+        }
+        catch (Throwable e) {
+            // Catching Throwable is ugly but JavaCC throws Error objects!
+            System.out.println("Syntax check failed: " + e.getMessage());
+        }
+    }*/
+}
+
+PARSER_END(SyntaxChecker)
+
+SKIP:  { " "| "\t" | "\n" | "\r" }
+
+TOKEN:
+{
+  "module" | "namespace" | "prefix" | "typedef" | "container" | "list" | "leaf" | "import" |
+  "description" | "key" | "config" | ";" | "{" | "}" | "true" | "false" |"units" | "type" | ":"|
+  "unit16" | "mandatory" |"default" | "string" |"organization" |"revision" |" max-elements" | "leaf-list" |
+    < ID: <LETTER> (<LETTER>|<DIGIT>|"_"|"-"|"//"|"."|":"|"/")* >|
+    < #LETTER : [ "a"-"z" ]| ["A"-"Z"] >|
+    < #DIGIT : [ "0"-"9" ] > |
+    < String1:  "\"" (<ID> " ")+ "\"">|
+    < number : (<DIGIT>)+  > |
+    < Date :(< DIGIT>)+ "-" (< DIGIT >)+ "-"(< DIGIT >)+ > |
+    <String: "\"" (~["\"","\\","\n","\r"] | "\\" (["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])? | ["0"-"3"] ["0"-"7"] ["0"-"7"]))* "\"">
+}
+int start() :
+{}
+{
+  wff()   // "well formed formula"  
+  {
+    return 0;  // returns 0 on successful parse
+  }
+}
+
+void wff() :
+{}
+{
+  P()< EOF >
+}
+
+void P():{}
+{
+  "module" < ID > "{"block()"}"
+}
+
+void block():{}
+{
+  "namespace" < String >";"
+  "prefix" ( < ID >|< String >)";"
+  ( "organization" < String >";" |
+  "	description" < String > ";" |
+  IM() )*
+  body_stmt()
+}
+
+void IM():{}
+{
+  ("import" < ID > "{" "prefix" < ID >";"  "}" )+
+}
+
+void body_stmt():{}
+{
+ (
+    typedef_stmt() |  container_stmt() |
+  datadef_stmt())*
+}
+
+void typedef_stmt():{}
+{
+    "typedef" < ID > "{" type_stmt() "}"
+}
+
+void type_stmt():{}
+{
+  /*("units" < String > |
+  "config" "true"|"false"";" |
+   type1_stmt()|
+   "description" < String >";")+*/
+   (  "type" "string" ";" |
+   "description" < String >";" |
+   "config" ("true"|"false") ";" )+
+}
+
+void datadef_stmt():{}
+{
+    (
+      container_stmt() |
+      list_stmt() )+
+      //leaf_stmt())+
+}
+
+void list_stmt():{}
+{
+      "list" < ID > "{"( ( ("unit16"|"string"|"key") (< String > |< ID >) ";") | stmt1()| max_stmt() | leaf_stmt() )+"}"
+}
+
+void max_stmt():{}
+{
+  " max-elements" < number > ";"
+}
+
+void container_stmt():{}
+{
+  "container" < ID >  ("{" stmt() "}")  
+}
+
+void stmt():{}
+{
+
+  (list_stmt()  | type_stmt() |leaf_stmt()|leaflist_stmt())+
+}
+void stmt1():{}
+{
+
+ "list" < ID > "{"( ("unit16"|"string"|"key") (< String > |< ID >) ";" | leaf_stmt() )+ "}"
+}
+void leaflist_stmt():{}
+{
+   ("leaf-list" < ID > "{" (type1_stmt()| ("description" < String >";"))*  "}")+
+}
+
+void leaf_stmt():{}
+{
+  ("leaf" < ID > "{" (type1_stmt()| ("description" < String >";"))*  "}")+
+}
+
+void type1_stmt():{}
+{
+  "type" ( (< ID >) | ("unit16"|"string"|"key")  )";"
+                               (("mandatory" "true" | "default" < number >)";")*
+}
